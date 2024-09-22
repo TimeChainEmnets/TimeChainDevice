@@ -2,7 +2,11 @@ module timechain-device
 
 go 1.22
 
-require github.com/eclipse/paho.mqtt.golang v1.5.0
+require (
+	github.com/eclipse/paho.mqtt.golang v1.5.0
+	periph.io/x/conn/v3 v3.7.1
+	periph.io/x/host/v3 v3.8.2
+)
 
 require (
 	github.com/gorilla/websocket v1.5.3 // indirect

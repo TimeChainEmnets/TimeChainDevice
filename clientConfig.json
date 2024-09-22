@@ -1,0 +1,20 @@
+{
+  "mqtt_config": {
+    "broker": "tcp://localhost:1883",
+    "client_id": "device001",
+    "device_info_topic": "sensors/data",
+    "username": "user",
+    "password": "pass"
+  },
+  "sensor_config": {
+    "device_id": "device001",
+    "sensor_id": "sensor001",
+    "sensor_type": "temperature",
+    "sample_rate": 3,
+    "publish_interval": 60,
+    "batch_size": 20, 
+    "min_value": 0,
+    "max_value": 100,
+    "unit": "s"
+  }
+}

@@ -1,50 +1,49 @@
 package main
 
 import (
+	"context"
 	"log"
-	"time"
 	"timechain-device/internal/config"
 	"timechain-device/internal/mqtt"
 	"timechain-device/internal/sensor"
-	"timechain-device/pkg/models"
 )
 
 func main() {
-	cfg, err := config.Load()
-	if err != nil {
-		log.Fatalf("Failed to load config: %v", err)
-	}
+	// 加载服务器端配置信息
+	cfg := config.LoadConfig("clientConfig.json", "brokerConfig.json")
 
-	mqttClient, err := mqtt.NewClient(cfg.MQTTConfig)
+	// 更新 MQTT 配置以匹配服务端配置
+	cfg.MQTTClientConfig.MQTTConfig.DeviceInfoTopic = cfg.MQTTBrokerConfig.MQTTConfig.DeviceInfoTopic
+
+	mqttClient, err := mqtt.NewClient(cfg.MQTTClientConfig)
 	if err != nil {
 		log.Fatalf("Failed to create MQTT client: %v", err)
 	}
 	defer mqttClient.Disconnect()
 
-	// 将传感器配置载入，定义出传感器实例
-	s := sensor.NewSensor(cfg.SensorConfig)
+	// 初始化 GPIO 传感器
+	// 假设我们使用的是 GPIO4 引脚
+	//gpioSensor, err := sensor.NewGPIOSensor("GPIO4")
+	//if err != nil {
+	//	log.Fatalf("Failed to initialize GPIO sensor: %v", err)
+	//}
+	//defer func(gpioSensor *sensor.GPIOSensor) {
+	//	err := gpioSensor.Close()
+	//	if err != nil {
+	//		log.Fatalf("close gpio sensor failed %s", err)
+	//	}
+	//}(gpioSensor)
 
-	for {
-		if err := mqttClient.ReconnectIfNeeded(); err != nil {
-			log.Printf("Failed to reconnect: %v", err)
-			time.Sleep(5 * time.Second)
-			continue
-		}
+	// s := sensor.NewSensor(cfg.MQTTClientConfig.SensorConfig, gpioSensor)
+	s := sensor.NewSensor(cfg.MQTTClientConfig.SensorConfig)
 
-		data := s.ReadData()
-		if err := mqttClient.PublishData(data); err != nil {
-			log.Printf("Failed to publish data: %v", err)
-		}
+	// 创建一个可取消的上下文
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
-		status := models.DeviceStatus{
-			DeviceID: cfg.SensorConfig.DeviceID,
-			Status:   "online",
-			LastSeen: time.Now(),
-		}
-		if err := mqttClient.PublishDeviceStatus(status); err != nil {
-			log.Printf("Failed to publish status: %v", err)
-		}
+	// 启动周期性发布
+	mqttClient.StartPeriodicPublish(ctx, s)
 
-		time.Sleep(time.Duration(cfg.SensorConfig.ReadInterval) * time.Second)
-	}
+	// 保持主程序运行
+	select {}
 }

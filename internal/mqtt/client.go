@@ -1,27 +1,29 @@
 package mqtt
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"log"
 	"timechain-device/internal/config"
+	"timechain-device/internal/sensor"
 	"timechain-device/pkg/models"
 )
 
 type Client struct {
 	client      mqtt.Client
 	topic       string
-	config      config.MQTTConfig
+	config      config.MQTTClientConfig
 	isConnected bool
 }
 
-func NewClient(config config.MQTTConfig) (*Client, error) {
+func NewClient(config config.MQTTClientConfig) (*Client, error) {
 	opts := mqtt.NewClientOptions().
-		AddBroker(config.Broker).
-		SetClientID(config.ClientID).
-		SetUsername(config.Username).
-		SetPassword(config.Password).
+		AddBroker(config.MQTTConfig.Broker).
+		SetClientID(config.MQTTConfig.ClientID).
+		SetUsername(config.MQTTConfig.Username).
+		SetPassword(config.MQTTConfig.Password).
 		SetAutoReconnect(true).
 		SetOnConnectHandler(onConnect).
 		SetConnectionLostHandler(onConnectionLost)
@@ -30,7 +32,7 @@ func NewClient(config config.MQTTConfig) (*Client, error) {
 
 	mqttClient := &Client{
 		client: client,
-		topic:  config.Topic,
+		topic:  config.MQTTConfig.DeviceInfoTopic,
 		config: config,
 	}
 
@@ -50,7 +52,7 @@ func onConnectionLost(client mqtt.Client, err error) {
 	log.Printf("Connection lost to MQTT broker: %v", err)
 }
 
-func (c *Client) PublishData(data models.SensorData) error {
+func (c *Client) PublishData(data models.BatchData) error {
 	if !c.isConnected {
 		return fmt.Errorf("not connected to MQTT broker")
 	}
@@ -110,4 +112,15 @@ func (c *Client) PublishDeviceStatus(status models.DeviceStatus) error {
 	}
 
 	return nil
+}
+
+func (c *Client) StartPeriodicPublish(ctx context.Context, sensor *sensor.Sensor) {
+	batchDataChan := sensor.CollectBatchData(ctx)
+	go func() {
+		for batchData := range batchDataChan {
+			if err := c.PublishData(batchData); err != nil {
+				log.Printf("Error publishing data: %v", err)
+			}
+		}
+	}()
 }

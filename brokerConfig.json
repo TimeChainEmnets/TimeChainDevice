@@ -1,0 +1,10 @@
+{
+  "mqtt_config": {
+    "address": ":1883",
+    "device_info_topic": "devices/info",
+    "port": 8080
+  },
+  "device_config": {
+    "scan_interval": 15
+  }
+}
