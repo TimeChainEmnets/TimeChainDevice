@@ -115,11 +115,18 @@ func (c *Client) PublishDeviceStatus(status models.DeviceStatus) error {
 }
 
 func (c *Client) StartPeriodicPublish(ctx context.Context, sensor *sensor.Sensor) {
-	batchDataChan := sensor.CollectBatchData(ctx)
 	go func() {
-		for batchData := range batchDataChan {
-			if err := c.PublishData(batchData); err != nil {
-				log.Printf("Error publishing data: %v", err)
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				batchDataChan := sensor.CollectBatchData(ctx)
+				for batchData := range batchDataChan {
+					if err := c.PublishData(batchData); err != nil {
+						log.Printf("Error publishing data: %v", err)
+					}
+				}
 			}
 		}
 	}()

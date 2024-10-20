@@ -23,7 +23,7 @@ func main() {
 
 	// 初始化 GPIO 传感器
 	// 假设我们使用的是 GPIO4 引脚
-	//gpioSensor, err := sensor.NewGPIOSensor("GPIO4")
+	gpioSensor, err := sensor.NewGPIOSensor("GPIO4")
 	//if err != nil {
 	//	log.Fatalf("Failed to initialize GPIO sensor: %v", err)
 	//}
@@ -35,7 +35,7 @@ func main() {
 	//}(gpioSensor)
 
 	// s := sensor.NewSensor(cfg.MQTTClientConfig.SensorConfig, gpioSensor)
-	s := sensor.NewSensor(cfg.MQTTClientConfig.SensorConfig)
+	s := sensor.NewSensor(cfg.MQTTClientConfig.SensorConfig, gpioSensor)
 
 	// 创建一个可取消的上下文
 	ctx, cancel := context.WithCancel(context.Background())

@@ -21,7 +21,7 @@ type Sensor struct {
 	reader     SensorReader
 }
 
-func NewSensor(config config.SensorConfig) *Sensor {
+func NewSensor(config config.SensorConfig, reader SensorReader) *Sensor {
 	// , reader SensorReader
 	midValue := (config.MinValue + config.MaxValue) / 2
 	return &Sensor{
@@ -29,11 +29,11 @@ func NewSensor(config config.SensorConfig) *Sensor {
 		lastValue:  midValue,
 		trend:      0,
 		noiseLevel: (config.MaxValue - config.MinValue) * 0.01, // 1% of range as noise
-		// reader:     reader,
+		reader:     reader,
 	}
 }
 
-func (s *Sensor) readSensorValue() float64 {
+func (s *Sensor) readSensorValue() (float64, error) {
 	// 更新趋势
 	s.trend += rand.Float64()*0.2 - 0.1 // 趋势在 -0.1 到 0.1 之间随机变化
 
@@ -53,32 +53,21 @@ func (s *Sensor) readSensorValue() float64 {
 	}
 
 	s.lastValue = newValue
-	return newValue
+
+	value, err := s.reader.Read()
+	log.Print(value)
+	return newValue, err
 }
 
-// 在传感器读取函数中
 func (s *Sensor) ReadData() (models.SensorData, error) {
-	//value, err := s.reader.Read()
-	//if err != nil {
-	//	return models.SensorData{}, err
-	//}
-	//
-	//// 可以在这里添加一些数据验证或处理
-	//if value < s.config.MinValue {
-	//	value = s.config.MinValue
-	//} else if value > s.config.MaxValue {
-	//	value = s.config.MaxValue
-	//}
-	//
-	//s.lastValue = value
-	//
-	//return models.SensorData{
-	//	Timestamp: time.Now(),
-	//	Value:     value,
-	//}, nil
+	value, err := s.readSensorValue()
+	if err != nil {
+		return models.SensorData{}, err
+	}
+
 	return models.SensorData{
-		Timestamp: time.Now(),          //  time.Now().Unix(),
-		Value:     s.readSensorValue(), // 实际读取传感器值的函数
+		Timestamp: time.Now(),
+		Value:     value,
 	}, nil
 }
 
