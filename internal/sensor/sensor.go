@@ -21,7 +21,8 @@ type Sensor struct {
 	reader     SensorReader
 }
 
-func NewSensor(config config.SensorConfig, reader SensorReader) *Sensor {
+
+func NewSensor(config config.SensorConfig) *Sensor {
 	// , reader SensorReader
 	midValue := (config.MinValue + config.MaxValue) / 2
 	return &Sensor{
@@ -29,11 +30,11 @@ func NewSensor(config config.SensorConfig, reader SensorReader) *Sensor {
 		lastValue:  midValue,
 		trend:      0,
 		noiseLevel: (config.MaxValue - config.MinValue) * 0.01, // 1% of range as noise
-		reader:     reader,
+		// reader:     reader,
 	}
 }
 
-func (s *Sensor) readSensorValue() (float64, error) {
+func (s *Sensor) readSensorValue() float64 {
 	// 更新趋势
 	s.trend += rand.Float64()*0.2 - 0.1 // 趋势在 -0.1 到 0.1 之间随机变化
 
@@ -54,20 +55,21 @@ func (s *Sensor) readSensorValue() (float64, error) {
 
 	s.lastValue = newValue
 
-	value, err := s.reader.Read()
-	log.Print(value)
-	return newValue, err
+	// value, err := s.reader.Read()
+	// log.Print(value)
+	return newValue
 }
 
 func (s *Sensor) ReadData() (models.SensorData, error) {
-	value, err := s.readSensorValue()
-	if err != nil {
-		return models.SensorData{}, err
-	}
+	value := s.readSensorValue()
 
 	return models.SensorData{
-		Timestamp: time.Now(),
+		SensorID: s.config.SensorID,
+		DeviceID: s.config.DeviceID,
+		Timestamp: time.Now().Unix(),
+		Type:	 s.config.SensorType,
 		Value:     value,
+		Unit:      s.config.Unit,
 	}, nil
 }
 
@@ -78,7 +80,7 @@ func (s *Sensor) CollectBatchData(ctx context.Context) <-chan models.BatchData {
 		ticker := time.NewTicker(time.Duration(s.config.SampleRate) * time.Second)
 		defer ticker.Stop()
 
-		var dataPoints []models.SensorData
+		var dataPoints []models.ReducedSensorData
 		for {
 			select {
 			case <-ctx.Done():
@@ -88,11 +90,13 @@ func (s *Sensor) CollectBatchData(ctx context.Context) <-chan models.BatchData {
 				if err != nil {
 					log.Fatalf("Read data from sensor failed! %s", err)
 				}
-				dataPoints = append(dataPoints, data)
+				reducedData := models.ReducedSensorData{data.Timestamp, data.Value}
+				dataPoints = append(dataPoints, reducedData)
 
 				if len(dataPoints) >= s.config.BatchSize {
 					batchData := models.BatchData{
 						DeviceID:   s.config.DeviceID,
+						Type:       s.config.SensorType,
 						Unit:       s.config.Unit,
 						DataPoints: dataPoints,
 					}

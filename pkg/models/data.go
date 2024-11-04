@@ -6,15 +6,24 @@ import (
 
 // SensorData 代表从传感器读取的单个数据点
 type SensorData struct {
-	Timestamp time.Time `json:"timestamp"`
-	Value     float64   `json:"value"`
+	SensorID string `json:"sensor_id"`
+	DeviceID  string  `json:"device_id"`
+	Timestamp int64   `json:"timestamp"`
+	Type      string  `json:"type"`
+	Value     float64 `json:"value"`
+	Unit      string  `json:"unit"`
 }
 
+type ReducedSensorData struct {
+	Timestamp int64   `json:"timestamp"`
+	Value     float64 `json:"value"`
+}
 // BatchData 代表一批传感器数据，可用于批量发送
 type BatchData struct {
 	DeviceID   string       `json:"device_id"`
+	Type      string  `json:"type"`
 	Unit       string       `json:"unit"`
-	DataPoints []SensorData `json:"data_points"`
+	DataPoints []ReducedSensorData `json:"data_points"`
 }
 
 // DeviceStatus 表示设备的当前状态

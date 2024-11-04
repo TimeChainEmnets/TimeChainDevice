@@ -12,9 +12,9 @@
     "sensor_type": "temperature",
     "sample_rate": 3,
     "publish_interval": 60,
-    "batch_size": 20, 
+    "batch_size": 20,
     "min_value": 0,
     "max_value": 100,
-    "unit": "s"
+    "unit": "Celsius"
   }
 }
