@@ -52,7 +52,7 @@ func onConnectionLost(client mqtt.Client, err error) {
 	log.Printf("Connection lost to MQTT broker: %v", err)
 }
 
-func (c *Client) PublishData(data models.BatchData) error {
+func (c *Client) PublishData(data models.SensorData) error {
 	if !c.isConnected {
 		return fmt.Errorf("not connected to MQTT broker")
 	}
@@ -121,9 +121,9 @@ func (c *Client) StartPeriodicPublish(ctx context.Context, sensor *sensor.Sensor
 			case <-ctx.Done():
 				return
 			default:
-				batchDataChan := sensor.CollectBatchData(ctx)
-				for batchData := range batchDataChan {
-					if err := c.PublishData(batchData); err != nil {
+				sensorDataChan := sensor.CollectBatchData(ctx)
+				for sensorData := range sensorDataChan {
+					if err := c.PublishData(sensorData); err != nil {
 						log.Printf("Error publishing data: %v", err)
 					}
 				}

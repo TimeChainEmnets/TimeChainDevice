@@ -73,14 +73,12 @@ func (s *Sensor) ReadData() (models.SensorData, error) {
 	}, nil
 }
 
-func (s *Sensor) CollectBatchData(ctx context.Context) <-chan models.BatchData {
-	out := make(chan models.BatchData)
+func (s *Sensor) CollectBatchData(ctx context.Context) <-chan models.SensorData {
+	out := make(chan models.SensorData)
 	go func() {
 		defer close(out)
 		ticker := time.NewTicker(time.Duration(s.config.SampleRate) * time.Second)
 		defer ticker.Stop()
-
-		var dataPoints []models.ReducedSensorData
 		for {
 			select {
 			case <-ctx.Done():
@@ -90,19 +88,7 @@ func (s *Sensor) CollectBatchData(ctx context.Context) <-chan models.BatchData {
 				if err != nil {
 					log.Fatalf("Read data from sensor failed! %s", err)
 				}
-				reducedData := models.ReducedSensorData{data.Timestamp, data.Value}
-				dataPoints = append(dataPoints, reducedData)
-
-				if len(dataPoints) >= s.config.BatchSize {
-					batchData := models.BatchData{
-						DeviceID:   s.config.DeviceID,
-						Type:       s.config.SensorType,
-						Unit:       s.config.Unit,
-						DataPoints: dataPoints,
-					}
-					out <- batchData
-					dataPoints = nil // Reset the slice
-				}
+				out <- data
 			}
 		}
 	}()
