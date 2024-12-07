@@ -5,6 +5,6 @@
     "port": 8080
   },
   "device_config": {
-    "scan_interval": 15
+    "scan_interval": 16
   }
 }
