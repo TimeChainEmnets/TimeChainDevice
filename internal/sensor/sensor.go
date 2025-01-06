@@ -5,8 +5,8 @@ import (
 	"log"
 	"math/rand"
 	"time"
-	"timechain-device/internal/config"
-	"timechain-device/pkg/models"
+	"github.com/TimeChainEmnets/TimeChainDevice/internal/config"
+	"github.com/TimeChainEmnets/TimeChainDevice/pkg/models"
 )
 
 type SensorReader interface {

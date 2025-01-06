@@ -3,9 +3,9 @@ package main
 import (
 	"context"
 	"log"
-	"timechain-device/internal/config"
-	"timechain-device/internal/mqtt"
-	"timechain-device/internal/sensor"
+	"github.com/TimeChainEmnets/TimeChainDevice/internal/config"
+	"github.com/TimeChainEmnets/TimeChainDevice/internal/mqtt"
+	"github.com/TimeChainEmnets/TimeChainDevice/internal/sensor"
 )
 
 func main() {

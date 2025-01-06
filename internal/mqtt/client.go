@@ -6,9 +6,9 @@ import (
 	"fmt"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"log"
-	"timechain-device/internal/config"
-	"timechain-device/internal/sensor"
-	"timechain-device/pkg/models"
+	"github.com/TimeChainEmnets/TimeChainDevice/internal/config"
+	"github.com/TimeChainEmnets/TimeChainDevice/internal/sensor"
+	"github.com/TimeChainEmnets/TimeChainDevice/pkg/models"
 )
 
 type Client struct {
